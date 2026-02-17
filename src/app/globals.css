@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ─── Light mode (default) ─── */
+:root {
+  --bg-primary: 248, 249, 252;
+  --bg-secondary: 255, 255, 255;
+  --bg-card: 255, 255, 255;
+  --text-primary: 30, 32, 40;
+  --text-secondary: 100, 105, 120;
+  --text-muted: 155, 160, 175;
+  --border: 228, 230, 240;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(200, 205, 220, 0.5);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+/* ─── Dark mode ─── */
+.dark {
+  --bg-primary: 16, 17, 19;
+  --bg-secondary: 26, 27, 30;
+  --bg-card: 37, 38, 43;
+  --text-primary: 240, 241, 245;
+  --text-secondary: 166, 167, 171;
+  --text-muted: 92, 95, 102;
+  --border: 55, 58, 64;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: rgb(var(--text-primary));
+  background: rgb(var(--bg-primary));
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 bg-clip-text text-transparent;
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+  }
+
+  .glow-border {
+    @apply border border-primary-500/30 shadow-[0_0_15px_rgba(92,124,250,0.15)];
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-[0_0_30px_rgba(92,124,250,0.2)] hover:border-primary-400/50;
+  }
+
+  .neon-text {
+    text-shadow: 0 0 10px rgba(92, 124, 250, 0.5), 0 0 20px rgba(92, 124, 250, 0.3);
+  }
+
+  /* Theme-aware text classes */
+  .t-text {
+    color: rgb(var(--text-primary));
+  }
+  .t-text-secondary {
+    color: rgb(var(--text-secondary));
+  }
+  .t-text-muted {
+    color: rgb(var(--text-muted));
+  }
+  .t-bg {
+    background-color: rgb(var(--bg-primary));
+  }
+  .t-bg-secondary {
+    background-color: rgb(var(--bg-secondary));
+  }
+  .t-bg-card {
+    background-color: rgb(var(--bg-card));
+  }
+  .t-border {
+    border-color: rgb(var(--border));
+  }
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--bg-secondary));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(92, 124, 250, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(92, 124, 250, 0.5);
+}
+
+/* ─── Animations ─── */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+}
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
