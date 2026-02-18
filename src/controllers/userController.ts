@@ -27,17 +27,34 @@ export class UserController {
   }
 
   static async searchUsers(query: {
+    q?: string;
     skill?: string;
     category?: string;
     level?: string;
     location?: string;
+    sortBy?: string;
     page?: number;
     limit?: number;
+    excludeUserId?: string;
   }) {
     await connectDB();
     const { page, limit, skip } = getPaginationParams(query.page, query.limit);
 
     const filter: Record<string, unknown> = { isBanned: false };
+
+    if (query.excludeUserId) {
+      filter._id = { $ne: query.excludeUserId };
+    }
+
+    if (query.q) {
+      const regex = { $regex: query.q, $options: 'i' };
+      filter.$or = [
+        { displayName: regex },
+        { 'skillsOffered.name': regex },
+        { 'skillsWanted.name': regex },
+        { bio: regex },
+      ];
+    }
 
     if (query.skill) {
       filter['skillsOffered.name'] = { $regex: query.skill, $options: 'i' };
@@ -52,10 +69,15 @@ export class UserController {
       filter.location = { $regex: query.location, $options: 'i' };
     }
 
+    let sort: Record<string, 1 | -1> = { rating: -1, totalSessions: -1 };
+    if (query.sortBy === 'newest') sort = { createdAt: -1 };
+    else if (query.sortBy === 'sessions') sort = { totalSessions: -1 };
+    else if (query.sortBy === 'name') sort = { displayName: 1 };
+
     const [users, total] = await Promise.all([
       User.find(filter)
         .select('-firebaseUid')
-        .sort({ rating: -1, totalSessions: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(limit),
       User.countDocuments(filter),

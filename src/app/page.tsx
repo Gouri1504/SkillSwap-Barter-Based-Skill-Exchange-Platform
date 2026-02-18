@@ -97,7 +97,7 @@ export default function HomePage() {
           </Suspense>
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-dark-900" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgb(var(--bg-primary))/60] to-[rgb(var(--bg-primary))]" />
 
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4 mt-10">
           <motion.div
@@ -107,7 +107,7 @@ export default function HomePage() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6">
               <Sparkles size={16} className="text-primary-400" />
-              <span className="text-sm text-dark-50">The Future of Skill Exchange</span>
+              <span className="text-sm t-text-secondary">The Future of Skill Exchange</span>
             </div>
           </motion.div>
 
@@ -150,8 +150,8 @@ export default function HomePage() {
         </div>
 
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-2">
-            <div className="w-1 h-2 bg-white/50 rounded-full" />
+          <div className="w-6 h-10 rounded-full border-2 border-[rgb(var(--border))] flex items-start justify-center p-2">
+            <div className="w-1 h-2 bg-[rgb(var(--text-muted))] rounded-full" />
           </div>
         </div>
       </section>
@@ -215,7 +215,7 @@ export default function HomePage() {
 
       {/* Trending Skills */}
       <section className="py-20 px-4 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-900 via-primary-900/10 to-dark-900" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[rgb(var(--bg-primary))] via-primary-50/30 dark:via-primary-900/10 to-[rgb(var(--bg-primary))]" />
         <div className="max-w-6xl mx-auto relative">
           <motion.div
             initial="hidden"
@@ -225,7 +225,7 @@ export default function HomePage() {
           >
             <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <TrendingUp size={16} className="text-primary-400" />
-              <span className="text-sm text-dark-50">Trending Now</span>
+              <span className="text-sm t-text-secondary">Trending Now</span>
             </motion.div>
             <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-bold mb-4">
               Popular Skills Being <span className="text-gradient">Exchanged</span>
@@ -243,7 +243,7 @@ export default function HomePage() {
                 key={skill}
                 variants={fadeUp}
                 custom={i * 0.5}
-                className="px-5 py-2.5 rounded-full glass hover-glow cursor-pointer text-sm text-dark-50 hover:t-text transition-all"
+                className="px-5 py-2.5 rounded-full glass hover-glow cursor-pointer text-sm t-text-secondary hover:t-text transition-all"
               >
                 {skill}
               </motion.div>
@@ -318,7 +318,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-white/5">
+      <footer className="py-12 px-4 border-t border-[rgb(var(--border))]">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">

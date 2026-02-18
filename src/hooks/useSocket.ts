@@ -13,9 +13,9 @@ export function useSocket() {
     if (!userProfile) return;
 
     const socket = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
-      path: '/api/socket/io',
+      path: '/api/socketio',
       addTrailingSlash: false,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
     });
 
     socket.on('connect', () => {

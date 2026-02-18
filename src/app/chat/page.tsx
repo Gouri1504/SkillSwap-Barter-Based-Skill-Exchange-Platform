@@ -84,7 +84,7 @@ function ChatPage() {
   }, [userProfile, fetchConversations]);
 
   useEffect(() => {
-    const userId = searchParams.get('user');
+    const userId = searchParams?.get('user');
     if (userId && userProfile) {
       initConversation(userId);
     }

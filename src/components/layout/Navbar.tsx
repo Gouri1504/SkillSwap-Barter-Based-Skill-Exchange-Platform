@@ -21,6 +21,8 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Compass,
+  ArrowLeftRight,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -32,7 +34,8 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/matches', label: 'Matches', icon: Users },
+    { href: '/explore', label: 'Explore', icon: Compass },
+    { href: '/matches', label: 'Matches', icon: ArrowLeftRight },
     { href: '/sessions', label: 'Sessions', icon: Calendar },
     { href: '/chat', label: 'Chat', icon: MessageSquare },
   ];

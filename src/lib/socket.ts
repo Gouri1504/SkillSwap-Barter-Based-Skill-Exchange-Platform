@@ -7,8 +7,9 @@ let socket: Socket | null = null;
 export const getSocket = (): Socket => {
   if (!socket) {
     socket = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
-      path: '/api/socket/io',
+      path: '/api/socketio',
       addTrailingSlash: false,
+      transports: ['polling', 'websocket'],
     });
   }
   return socket;

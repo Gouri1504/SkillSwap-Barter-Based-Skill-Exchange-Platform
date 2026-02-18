@@ -118,6 +118,7 @@ export default function ProfilePage() {
 
     if (result) {
       await refreshProfile();
+      router.push('/dashboard');
     }
   };
 
@@ -155,19 +156,19 @@ export default function ProfilePage() {
                 <div className="flex-1 space-y-4">
                   <Input label="Display Name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" />
                   <div>
-                    <label className="block text-sm font-medium text-dark-50 mb-1.5">Bio</label>
+                    <label className="block text-sm font-medium t-text-secondary mb-1.5">Bio</label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       placeholder="Tell others about yourself..."
-                      className="w-full bg-[rgb(var(--bg-secondary))] border border-[rgb(var(--border))] rounded-xl px-4 py-2.5 t-text placeholder-dark-200 focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 min-h-[100px] resize-none"
+                      className="w-full bg-[rgb(var(--bg-secondary))] border border-[rgb(var(--border))] rounded-xl px-4 py-2.5 t-text placeholder:t-text-muted focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 min-h-[100px] resize-none"
                       maxLength={500}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Input label="Location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, Country" icon={<Globe size={16} />} />
                     <div>
-                      <label className="block text-sm font-medium text-dark-50 mb-1.5">Experience Level</label>
+                      <label className="block text-sm font-medium t-text-secondary mb-1.5">Experience Level</label>
                       <select
                         value={experienceLevel}
                         onChange={(e) => setExperienceLevel(e.target.value)}
