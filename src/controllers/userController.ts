@@ -40,7 +40,7 @@ export class UserController {
     await connectDB();
     const { page, limit, skip } = getPaginationParams(query.page, query.limit);
 
-    const filter: Record<string, unknown> = { isBanned: false };
+    const filter: Record<string, unknown> = { isBanned : false };
 
     if (query.excludeUserId) {
       filter._id = { $ne: query.excludeUserId };
@@ -82,8 +82,15 @@ export class UserController {
         .limit(limit),
       User.countDocuments(filter),
     ]);
-
-    return { users, total, page, limit };
+    return {
+      data: users,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   static async getTopUsers(limitCount = 10) {

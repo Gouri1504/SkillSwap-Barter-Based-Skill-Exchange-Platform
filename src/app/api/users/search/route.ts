@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       excludeUserId: String(user._id),
     });
 
-    return paginatedResponse(result.users, result.total, result.page, result.limit);
+    return paginatedResponse(result.data, result.pagination.total, result.pagination.page, result.pagination.limit);
   } catch (error) {
     return errorResponse(error);
   }

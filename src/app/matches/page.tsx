@@ -79,11 +79,12 @@ export default function MatchesPage() {
     async function fetchData() {
       if (tab === 'discover') {
         const data = await request('/api/matches/find?limit=50');
-        if (data) setPotentialMatches((data as { data: PotentialMatch[] }).data || []);
+        // console.log(data);
+        if (data) setPotentialMatches((data as { data: PotentialMatch[] }) || []);
       } else {
         const status = tab === 'pending' ? 'pending' : 'accepted';
         const data = await request(`/api/matches?status=${status}`);
-        if (data) setExistingMatches((data as { data: ExistingMatch[] }).data || []);
+        if (data) setExistingMatches((data as { data: ExistingMatch[] }) || []);
       }
     }
     fetchData();

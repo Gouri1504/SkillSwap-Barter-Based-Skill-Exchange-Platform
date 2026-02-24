@@ -72,10 +72,11 @@ export default function ExplorePage() {
     params.set('limit', '18');
 
     const data = await request(`/api/users/search?${params.toString()}`);
+    console.log(data);
     if (data) {
-      const response = data as { data: UserResult[]; pagination: { totalPages: number } };
-      setUsers(response.data || []);
-      setTotalPages(response.pagination?.totalPages || 1);
+      const response = data as { data: UserResult[]; pagination: { pages: number } };
+      setUsers(response || []);
+      setTotalPages(response.pagination?.pages || 1);
     }
   }, [searchQuery, category, level, sortBy, page, request]);
 
