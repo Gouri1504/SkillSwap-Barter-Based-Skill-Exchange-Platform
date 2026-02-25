@@ -80,11 +80,11 @@ export default function MatchesPage() {
       if (tab === 'discover') {
         const data = await request('/api/matches/find?limit=50');
         // console.log(data);
-        if (data) setPotentialMatches((data as { data: PotentialMatch[] }) || []);
+        if (data) setPotentialMatches(data as PotentialMatch[]);
       } else {
         const status = tab === 'pending' ? 'pending' : 'accepted';
         const data = await request(`/api/matches?status=${status}`);
-        if (data) setExistingMatches((data as { data: ExistingMatch[] }) || []);
+        if (data) setExistingMatches(data as ExistingMatch[]);
       }
     }
     fetchData();

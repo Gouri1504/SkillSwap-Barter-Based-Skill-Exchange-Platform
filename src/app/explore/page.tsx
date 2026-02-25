@@ -74,9 +74,8 @@ export default function ExplorePage() {
     const data = await request(`/api/users/search?${params.toString()}`);
     console.log(data);
     if (data) {
-      const response = data as { data: UserResult[]; pagination: { pages: number } };
-      setUsers(response || []);
-      setTotalPages(response.pagination?.pages || 1);
+      setUsers(data as UserResult[]);
+      setTotalPages((data as { pagination?: { pages: number } }).pagination?.pages || 1);
     }
   }, [searchQuery, category, level, sortBy, page, request]);
 
