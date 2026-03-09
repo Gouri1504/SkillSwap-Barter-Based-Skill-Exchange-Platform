@@ -2,7 +2,7 @@
 
 A full-stack web application that enables users to exchange skills through a barter system. Users list skills they can teach and skills they want to learn; the platform matches them with compatible partners, facilitates scheduling and real-time communication, and tracks reputation through a review system — all without any monetary transactions.
 
-Built with **Next.js**, **TypeScript**, **MongoDB**, **Firebase Auth**, and **Socket.io**.
+Built with **Next.js**, **TypeScript**, **MongoDB**, **Firebase Auth**, **WebRTC** and **Socket.io**.
 
 ---
 
@@ -18,7 +18,7 @@ Built with **Next.js**, **TypeScript**, **MongoDB**, **Firebase Auth**, and **So
 - [Real-Time Communication](#real-time-communication)
 - [Installation and Setup](#installation-and-setup)
 - [Project Structure](#project-structure)
-- [License](#license)
+
 
 ---
 
@@ -245,7 +245,7 @@ The Socket.io server is initialized through a Pages Router API route (`src/pages
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/SkillSwap-Barter-Based-Skill-Exchange-Platform.git
+git clone https://github.com/Gouri1504/SkillSwap-Barter-Based-Skill-Exchange-Platform.git
 cd SkillSwap-Barter-Based-Skill-Exchange-Platform
 ```
 
@@ -350,6 +350,4 @@ src/
 
 ---
 
-## License
 
-This project is available under the [MIT License](LICENSE).
