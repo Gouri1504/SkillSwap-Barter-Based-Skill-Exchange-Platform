@@ -7,13 +7,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await authenticateUser(req);
     const body = await req.json();
     const session = await SessionController.addResource(
-      params.id,
+      id,
       String(user._id),
       body
     );

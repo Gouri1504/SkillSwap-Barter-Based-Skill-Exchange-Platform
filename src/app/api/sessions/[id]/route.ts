@@ -7,11 +7,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await authenticateUser(req);
-    const session = await SessionController.getSession(params.id, String(user._id));
+    const session = await SessionController.getSession(id, String(user._id));
     return successResponse(session);
   } catch (error) {
     return errorResponse(error);
@@ -20,13 +21,14 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await authenticateUser(req);
     const body = await req.json();
     const session = await SessionController.updateSession(
-      params.id,
+      id,
       String(user._id),
       body
     );

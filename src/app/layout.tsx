@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import SkillOnboarding from '@/components/auth/SkillOnboarding';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             {children}
+            <SkillOnboarding />
             <Toaster
               position="top-right"
               toastOptions={{

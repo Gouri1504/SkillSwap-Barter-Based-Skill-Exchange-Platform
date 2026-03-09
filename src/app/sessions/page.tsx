@@ -302,9 +302,21 @@ export default function SessionsPage() {
                     </div>
                   )}
 
-                  {selectedSession.meetingLink && (
-                    <a href={`/meet/${selectedSession.meetingLink}`} target="_blank" className="flex items-center gap-2 text-primary-500 hover:underline text-sm">
-                      <ExternalLink size={14} /> Join Meeting
+                  {selectedSession.meetingLink ? (
+                    <a
+                      href={`/meet/${selectedSession.meetingLink}`}
+                      target="_blank"
+                      className="flex items-center justify-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-all text-sm font-medium"
+                    >
+                      <Video size={18} /> Join Video Meeting
+                    </a>
+                  ) : (selectedSession.status === 'scheduled' || selectedSession.status === 'in-progress') && (
+                    <a
+                      href={`/meet/meet-${selectedSession._id.slice(-10)}`}
+                      target="_blank"
+                      className="flex items-center justify-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-all text-sm font-medium"
+                    >
+                      <Video size={18} /> Start Video Meeting
                     </a>
                   )}
 

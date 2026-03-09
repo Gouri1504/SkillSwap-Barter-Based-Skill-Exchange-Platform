@@ -7,13 +7,14 @@ export const dynamic = 'force-dynamic';
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await authenticateUser(req);
     const body = await req.json();
     const match = await MatchController.updateMatch(
-      params.id,
+      id,
       String(user._id),
       body
     );

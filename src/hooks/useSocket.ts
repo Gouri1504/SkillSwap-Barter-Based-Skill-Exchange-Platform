@@ -4,10 +4,35 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/context/AuthContext';
 
+interface MessagePayload {
+  _id: string;
+  content: string;
+  sender: { _id: string; displayName: string; photoURL: string };
+  messageType: string;
+  createdAt: string;
+}
+
 export function useSocket() {
   const { userProfile } = useAuth();
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const listenersRef = useRef<Map<string, Set<(...args: unknown[]) => void>>>(new Map());
+
+  const registerListener = useCallback((event: string, callback: (...args: unknown[]) => void) => {
+    if (!listenersRef.current.has(event)) {
+      listenersRef.current.set(event, new Set());
+    }
+    listenersRef.current.get(event)!.add(callback);
+
+    if (socketRef.current) {
+      socketRef.current.on(event, callback);
+    }
+
+    return () => {
+      listenersRef.current.get(event)?.delete(callback);
+      socketRef.current?.off(event, callback);
+    };
+  }, []);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -29,6 +54,10 @@ export function useSocket() {
 
     socketRef.current = socket;
 
+    listenersRef.current.forEach((callbacks, event) => {
+      callbacks.forEach((cb) => socket.on(event, cb));
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
@@ -44,13 +73,7 @@ export function useSocket() {
     socketRef.current?.emit('leave-room', roomId);
   }, []);
 
-  const sendMessage = useCallback((roomId: string, message: {
-    _id: string;
-    content: string;
-    sender: { _id: string; displayName: string; photoURL: string };
-    messageType: string;
-    createdAt: string;
-  }) => {
+  const sendMessage = useCallback((roomId: string, message: MessagePayload) => {
     socketRef.current?.emit('send-message', { roomId, message });
   }, []);
 
@@ -62,32 +85,17 @@ export function useSocket() {
     socketRef.current?.emit('stop-typing', { roomId, userId });
   }, []);
 
-  const onNewMessage = useCallback((callback: (message: {
-    _id: string;
-    content: string;
-    sender: { _id: string; displayName: string; photoURL: string };
-    messageType: string;
-    createdAt: string;
-  }) => void) => {
-    socketRef.current?.on('new-message', callback);
-    return () => {
-      socketRef.current?.off('new-message', callback);
-    };
-  }, []);
+  const onNewMessage = useCallback((callback: (message: MessagePayload) => void) => {
+    return registerListener('new-message', callback as (...args: unknown[]) => void);
+  }, [registerListener]);
 
   const onUserTyping = useCallback((callback: (data: { userId: string; displayName: string }) => void) => {
-    socketRef.current?.on('user-typing', callback);
-    return () => {
-      socketRef.current?.off('user-typing', callback);
-    };
-  }, []);
+    return registerListener('user-typing', callback as (...args: unknown[]) => void);
+  }, [registerListener]);
 
   const onUserStopTyping = useCallback((callback: (data: { userId: string }) => void) => {
-    socketRef.current?.on('user-stop-typing', callback);
-    return () => {
-      socketRef.current?.off('user-stop-typing', callback);
-    };
-  }, []);
+    return registerListener('user-stop-typing', callback as (...args: unknown[]) => void);
+  }, [registerListener]);
 
   return {
     socket: socketRef.current,

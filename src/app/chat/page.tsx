@@ -1,13 +1,15 @@
 'use client';
 
 import React, { Suspense, useEffect, useState, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { MessageSquare, Send, Search, Circle, Wifi, WifiOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, Send, Search, Circle, Wifi, WifiOff, Video, Calendar, X, Clock } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
 import { useApi } from '@/hooks/useApi';
 import { useSocket } from '@/hooks/useSocket';
@@ -70,6 +72,13 @@ function ChatPage() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previousConvoRef = useRef<string | null>(null);
 
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleSkill, setScheduleSkill] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleDuration, setScheduleDuration] = useState(60);
+  const [scheduleNotes, setScheduleNotes] = useState('');
+  const [scheduling, setScheduling] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !userProfile) router.push('/');
   }, [authLoading, userProfile, router]);
@@ -110,7 +119,6 @@ function ChatPage() {
     setLoadingMessages(false);
   };
 
-  // Socket.io: join/leave rooms when conversation changes
   useEffect(() => {
     if (previousConvoRef.current) {
       leaveRoom(previousConvoRef.current);
@@ -122,7 +130,6 @@ function ChatPage() {
     previousConvoRef.current = selectedConvo;
   }, [selectedConvo, joinRoom, leaveRoom]);
 
-  // Socket.io: listen for new messages
   useEffect(() => {
     const cleanup = onNewMessage((message) => {
       setMessages((prev) => [...prev, message]);
@@ -130,7 +137,6 @@ function ChatPage() {
     return cleanup;
   }, [onNewMessage]);
 
-  // Socket.io: listen for typing
   useEffect(() => {
     const cleanupTyping = onUserTyping((data) => {
       if (data.userId !== userProfile?._id) {
@@ -173,11 +179,93 @@ function ChatPage() {
       setMessages((prev) => [...prev, result.message]);
       setNewMessage('');
       fetchConversations();
-
-      // Broadcast via socket
       socketSendMessage(selectedConvo, result.message);
       emitStopTyping(selectedConvo, userProfile._id);
     }
+  };
+
+  const startVideoCall = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let id = '';
+    for (let i = 0; i < 10; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+    const meetingId = `meet-${id}`;
+    const meetingUrl = `${window.location.origin}/meet/${meetingId}`;
+
+    if (selectedConvo && userProfile) {
+      request('/api/chat/messages', 'POST', {
+        conversationId: selectedConvo,
+        content: `Started a video call: ${meetingUrl}`,
+      }).then((data) => {
+        if (data) {
+          const result = data as { message: Message };
+          setMessages((prev) => [...prev, result.message]);
+          fetchConversations();
+          socketSendMessage(selectedConvo, result.message);
+        }
+      });
+    }
+
+    window.open(`/meet/${meetingId}`, '_blank');
+  };
+
+  const handleScheduleSession = async () => {
+    if (!scheduleSkill.trim() || !scheduleDate) return;
+    setScheduling(true);
+
+    const otherUser = getOtherUser();
+    if (!otherUser) {
+      setScheduling(false);
+      return;
+    }
+
+    const matchData = await request('/api/matches', 'POST', {
+      targetUserId: otherUser._id,
+      skillOffered: scheduleSkill,
+      skillWanted: scheduleSkill,
+    });
+
+    let matchId = '';
+    if (matchData) {
+      const m = matchData as { _id: string };
+      matchId = m._id;
+    }
+
+    if (matchId) {
+      await request('/api/sessions', 'POST', {
+        matchId,
+        skill: scheduleSkill,
+        scheduledAt: new Date(scheduleDate).toISOString(),
+        duration: scheduleDuration,
+        notes: scheduleNotes,
+      });
+    }
+
+    if (selectedConvo && userProfile) {
+      const dateStr = new Date(scheduleDate).toLocaleString();
+      const msgData = await request('/api/chat/messages', 'POST', {
+        conversationId: selectedConvo,
+        content: `Scheduled a session: ${scheduleSkill} on ${dateStr} (${scheduleDuration} min)`,
+      });
+      if (msgData) {
+        const result = msgData as { message: Message };
+        setMessages((prev) => [...prev, result.message]);
+        fetchConversations();
+        socketSendMessage(selectedConvo, result.message);
+      }
+    }
+
+    setShowScheduleModal(false);
+    setScheduleSkill('');
+    setScheduleDate('');
+    setScheduleDuration(60);
+    setScheduleNotes('');
+    setScheduling(false);
+  };
+
+  const getOtherUser = () => {
+    if (!selectedConvo || !userProfile) return null;
+    const convo = conversations.find((c) => c._id === selectedConvo);
+    return convo?.participants.find((p) => p._id !== userProfile._id) || null;
   };
 
   if (authLoading || !userProfile) {
@@ -195,6 +283,8 @@ function ChatPage() {
         p.displayName.toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
+
+  const otherUser = getOtherUser();
 
   return (
     <main className="min-h-screen t-bg">
@@ -225,12 +315,12 @@ function ChatPage() {
             </div>
             <div className="flex-1 overflow-y-auto">
               {filteredConvos.map((convo) => {
-                const otherUser = convo.participants.find((p) => p._id !== userProfile._id);
-                if (!otherUser) return null;
+                const other = convo.participants.find((p) => p._id !== userProfile._id);
+                if (!other) return null;
 
                 const isActive = convo._id === selectedConvo;
-                const isOnline = otherUser.lastActive &&
-                  new Date(otherUser.lastActive).getTime() > Date.now() - 5 * 60 * 1000;
+                const isOnline = other.lastActive &&
+                  new Date(other.lastActive).getTime() > Date.now() - 5 * 60 * 1000;
 
                 return (
                   <button
@@ -242,13 +332,13 @@ function ChatPage() {
                     )}
                   >
                     <div className="relative">
-                      <Avatar src={otherUser.photoURL} name={otherUser.displayName} size="md" />
+                      <Avatar src={other.photoURL} name={other.displayName} size="md" />
                       {isOnline && (
                         <Circle size={10} className="absolute bottom-0 right-0 fill-green-400 text-green-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium t-text truncate">{otherUser.displayName}</p>
+                      <p className="text-sm font-medium t-text truncate">{other.displayName}</p>
                       {convo.lastMessage && (
                         <p className="text-xs t-text-muted truncate">{convo.lastMessage.content}</p>
                       )}
@@ -269,22 +359,42 @@ function ChatPage() {
           <Card className="flex-1 flex flex-col p-0 overflow-hidden">
             {selectedConvo ? (
               <>
+                {/* Chat Header with Video Call & Schedule buttons */}
                 <div className="p-4 border-b border-[rgb(var(--border))]">
-                  {(() => {
-                    const convo = conversations.find((c) => c._id === selectedConvo);
-                    const otherUser = convo?.participants.find((p) => p._id !== userProfile._id);
-                    return otherUser ? (
-                      <div className="flex items-center gap-3">
-                        <Avatar src={otherUser.photoURL} name={otherUser.displayName} size="md" />
-                        <div>
-                          <p className="font-medium t-text">{otherUser.displayName}</p>
-                          <p className="text-xs text-green-500">Online</p>
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {otherUser && (
+                        <>
+                          <Avatar src={otherUser.photoURL} name={otherUser.displayName} size="md" />
+                          <div>
+                            <p className="font-medium t-text">{otherUser.displayName}</p>
+                            <p className="text-xs text-green-500">Online</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={startVideoCall}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-all text-sm font-medium"
+                        title="Start video call"
+                      >
+                        <Video size={16} />
+                        <span className="hidden sm:inline">Call</span>
+                      </button>
+                      <button
+                        onClick={() => setShowScheduleModal(true)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-500/20 transition-all text-sm font-medium"
+                        title="Schedule a session"
+                      >
+                        <Calendar size={16} />
+                        <span className="hidden sm:inline">Schedule</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {loadingMessages ? (
                     <div className="flex justify-center py-8">
@@ -293,6 +403,8 @@ function ChatPage() {
                   ) : (
                     messages.map((msg) => {
                       const isOwn = msg.sender._id === userProfile._id;
+                      const isMeetingLink = msg.content.includes('/meet/');
+
                       return (
                         <motion.div
                           key={msg._id}
@@ -306,7 +418,28 @@ function ChatPage() {
                               ? 'bg-primary-500 text-white rounded-br-sm'
                               : 'bg-[rgb(var(--bg-secondary))] t-text rounded-bl-sm border border-[rgb(var(--border))]'
                           )}>
-                            <p className="text-sm">{msg.content}</p>
+                            {isMeetingLink ? (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Video size={14} />
+                                  <span className="text-sm font-medium">Video Call</span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const match = msg.content.match(/\/meet\/[\w-]+/);
+                                    if (match) window.open(match[0], '_blank');
+                                  }}
+                                  className={clsx(
+                                    'text-xs underline',
+                                    isOwn ? 'text-white/80 hover:text-white' : 'text-primary-500 hover:text-primary-400'
+                                  )}
+                                >
+                                  Join Meeting
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="text-sm">{msg.content}</p>
+                            )}
                             <p className={clsx('text-[10px] mt-1', isOwn ? 'text-white/50' : 't-text-muted')}>
                               {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
@@ -316,7 +449,6 @@ function ChatPage() {
                     })
                   )}
 
-                  {/* Typing indicator */}
                   {typingUser && (
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
@@ -339,6 +471,7 @@ function ChatPage() {
                   <div ref={messagesEndRef} />
                 </div>
 
+                {/* Message Input */}
                 <div className="p-4 border-t border-[rgb(var(--border))]">
                   <div className="flex gap-2">
                     <Input
@@ -373,6 +506,79 @@ function ChatPage() {
           </Card>
         </div>
       </div>
+
+      {/* Schedule Session Modal */}
+      <Modal isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} title="Schedule a Session" size="md">
+        <div className="space-y-4">
+          <p className="text-sm t-text-secondary">
+            Schedule a learning session with {otherUser?.displayName || 'this user'}.
+          </p>
+
+          <Input
+            label="Skill Topic"
+            placeholder="e.g., React Fundamentals"
+            value={scheduleSkill}
+            onChange={(e) => setScheduleSkill(e.target.value)}
+            icon={<Calendar size={14} />}
+          />
+
+          <div>
+            <label className="block text-sm font-medium t-text-secondary mb-1.5">Date & Time</label>
+            <input
+              type="datetime-local"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
+              min={new Date().toISOString().slice(0, 16)}
+              className="w-full bg-[rgb(var(--bg-secondary))] border border-[rgb(var(--border))] rounded-xl px-4 py-2.5 t-text focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium t-text-secondary mb-1.5">Duration</label>
+            <div className="flex gap-2">
+              {[30, 60, 90, 120].map((mins) => (
+                <button
+                  key={mins}
+                  onClick={() => setScheduleDuration(mins)}
+                  className={clsx(
+                    'flex-1 py-2 rounded-xl text-sm font-medium transition-all border',
+                    scheduleDuration === mins
+                      ? 'bg-primary-500 text-white border-primary-500'
+                      : 'bg-[rgb(var(--bg-secondary))] t-text-secondary border-[rgb(var(--border))] hover:border-primary-500/50'
+                  )}
+                >
+                  <Clock size={12} className="inline mr-1" />
+                  {mins}m
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium t-text-secondary mb-1.5">Notes (optional)</label>
+            <textarea
+              value={scheduleNotes}
+              onChange={(e) => setScheduleNotes(e.target.value)}
+              placeholder="Topics to cover, preparation needed..."
+              className="w-full bg-[rgb(var(--bg-secondary))] border border-[rgb(var(--border))] rounded-xl px-4 py-2.5 t-text placeholder:t-text-muted focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 text-sm min-h-[80px] resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" onClick={() => setShowScheduleModal(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleScheduleSession}
+              loading={scheduling}
+              disabled={!scheduleSkill.trim() || !scheduleDate}
+              className="flex-1"
+            >
+              <Calendar size={14} /> Schedule
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }
