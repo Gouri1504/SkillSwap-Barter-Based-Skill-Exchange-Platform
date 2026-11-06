@@ -46,10 +46,17 @@ export async function authenticateUser(req: NextRequest): Promise<IUserDocument>
     await user.save();
 
     return user;
-  } catch (error) {
-    if (error instanceof ForbiddenError) throw error;
-    throw new UnauthorizedError('Invalid or expired token');
-  }
+  } catch (error: any) {
+  console.error('Authentication error:', {
+    code: error.code,
+    message: error.message,
+    name: error.name,
+  });
+
+  if (error instanceof ForbiddenError) throw error;
+
+  throw new UnauthorizedError('Invalid or expired token');
+}
 }
 
 export async function authenticateAdmin(req: NextRequest): Promise<IUserDocument> {
